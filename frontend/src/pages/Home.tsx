@@ -216,7 +216,7 @@ const Home = () => {
               {/* Main dashboard image with floating effect */}
               <div className="relative z-10 transform transition-all duration-500 hover:scale-[1.02]">
                 <img
-                  src="/dashboard.webp"
+                  src="/dashboard1.webp"
                   alt="InvoicePro dashboard showing sample invoice creation interface"
                   className="w-full rounded-xl shadow-2xl border border-white/10"
                   loading="lazy"
