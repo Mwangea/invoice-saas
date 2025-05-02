@@ -8,9 +8,11 @@ import Features from "./pages/Features";
 import Login from "./Auth/LoginPage";
 import Register from "./Auth/RegisterPage";
 import ForgotPassword from "./Auth/ForgotPassword";
+import { ScrollPreserver } from "./components/ScrollPreserver";
 
 const App = () => {
   return (
+    <ScrollPreserver>
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
@@ -23,9 +25,8 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-
-
     </Routes>
+    </ScrollPreserver>
   );
 };
 

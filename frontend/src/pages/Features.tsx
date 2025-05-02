@@ -236,7 +236,7 @@ const Features = () => {
             </Link>
             <Link
               to="/pricing"
-              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-700 bg-opacity-60 hover:bg-opacity-70"
+              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-[#00c6ff] to-[#0072ff] bg-opacity-60 hover:bg-opacity-70"
             >
               View Pricing
             </Link>
