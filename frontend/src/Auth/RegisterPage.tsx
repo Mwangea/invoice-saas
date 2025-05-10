@@ -1,7 +1,124 @@
-import { Link } from "react-router-dom";
+import { useState, FormEvent, ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import API from "../services/api";
+import { AxiosError } from "axios";
+
+interface RegisterFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface FormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  [key: string]: string | undefined;
+}
+
+interface ServerError {
+  param: string;
+  msg: string;
+}
 
 const Register = () => {
+  const [formData, setFormData] = useState<RegisterFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [apiError, setApiError] = useState("");
+  const navigate = useNavigate();
+
+  const { firstName, lastName, email, password, confirmPassword } = formData;
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user types
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: "" });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
+    
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setApiError("");
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const response = await API.post("/auth/register", {
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword
+      });
+
+      // Store token in localStorage
+      localStorage.setItem("token", response.data.token);
+      
+      // Store user data (without password) if needed
+      localStorage.setItem("user", JSON.stringify(response.data.data.user));
+
+      // Redirect to dashboard or home page
+      navigate("/login");
+
+    } catch (err) {
+      setLoading(false);
+      if (err instanceof AxiosError) {
+        if (err.response?.data.errors) {
+          // Handle validation errors from server
+          const serverErrors: FormErrors = {};
+          (err.response.data.errors as ServerError[]).forEach(error => {
+            serverErrors[error.param] = error.msg;
+          });
+          setErrors(serverErrors);
+        } else {
+          setApiError(err.response?.data.message || "Registration failed");
+        }
+      } else if (err instanceof Error) {
+        setApiError("An error occurred. Please try again.");
+      } else {
+        setApiError("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155] bg-[length:200%_200%] animate-gradientShift">
       {/* SEO Meta Tags */}
@@ -58,35 +175,51 @@ const Register = () => {
               <p className="text-white/80 text-sm sm:text-base">Start your 14-day free trial</p>
             </div>
 
-            <form className="space-y-4 sm:space-y-6">
+            {apiError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                {apiError}
+              </div>
+            )}
+
+            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label htmlFor="first-name" className="block text-sm font-medium text-white/80 mb-1">
+                  <label htmlFor="firstName" className="block text-sm font-medium text-white/80 mb-1">
                     First name
                   </label>
                   <input
-                    id="first-name"
-                    name="first-name"
+                    id="firstName"
+                    name="firstName"
                     type="text"
                     autoComplete="given-name"
                     required
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                    value={firstName}
+                    onChange={handleChange}
+                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border ${errors.firstName ? 'border-red-500/50' : 'border-white/10'} rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base`}
                     placeholder="John"
                   />
+                  {errors.firstName && (
+                    <p className="mt-1 text-xs text-red-400">{errors.firstName}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="last-name" className="block text-sm font-medium text-white/80 mb-1">
+                  <label htmlFor="lastName" className="block text-sm font-medium text-white/80 mb-1">
                     Last name
                   </label>
                   <input
-                    id="last-name"
-                    name="last-name"
+                    id="lastName"
+                    name="lastName"
                     type="text"
                     autoComplete="family-name"
                     required
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                    value={lastName}
+                    onChange={handleChange}
+                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border ${errors.lastName ? 'border-red-500/50' : 'border-white/10'} rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base`}
                     placeholder="Doe"
                   />
+                  {errors.lastName && (
+                    <p className="mt-1 text-xs text-red-400">{errors.lastName}</p>
+                  )}
                 </div>
               </div>
 
@@ -100,9 +233,14 @@ const Register = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  value={email}
+                  onChange={handleChange}
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border ${errors.email ? 'border-red-500/50' : 'border-white/10'} rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base`}
                   placeholder="you@example.com"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-400">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -115,27 +253,34 @@ const Register = () => {
                   type="password"
                   autoComplete="new-password"
                   required
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  value={password}
+                  onChange={handleChange}
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border ${errors.password ? 'border-red-500/50' : 'border-white/10'} rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base`}
                   placeholder="••••••••"
                 />
-                <p className="mt-1 sm:mt-2 text-xs text-white/60">
-                  Must be at least 8 characters
+                <p className={`mt-1 sm:mt-2 text-xs ${errors.password ? 'text-red-400' : 'text-white/60'}`}>
+                  Must be at least 6 characters
                 </p>
               </div>
 
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-white/80 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/80 mb-1">
                   Confirm password
                 </label>
                 <input
-                  id="confirm-password"
-                  name="confirm-password"
+                  id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
                   autoComplete="new-password"
                   required
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  value={confirmPassword}
+                  onChange={handleChange}
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border ${errors.confirmPassword ? 'border-red-500/50' : 'border-white/10'} rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base`}
                   placeholder="••••••••"
                 />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-400">{errors.confirmPassword}</p>
+                )}
               </div>
 
               <div className="flex items-start">
@@ -165,9 +310,18 @@ const Register = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00c6ff] to-[#0072ff] hover:from-[#00b4e6] hover:to-[#0066cc] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                  disabled={loading}
+                  className={`w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00c6ff] to-[#0072ff] hover:from-[#00b4e6] hover:to-[#0066cc] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  Create account
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating account...
+                    </>
+                  ) : 'Create account'}
                 </button>
               </div>
             </form>
