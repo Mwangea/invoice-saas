@@ -72,7 +72,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Helmet>
-        <title>{currentPost.title} | InvoicePro Blog</title>
+        <title>{currentPost.title} | InvoiceSnap Blog</title>
         <meta name="description" content={currentPost.content.substring(0, 160)} />
         <meta name="keywords" content={currentPost.tags.join(", ")} />
         <meta property="og:title" content={currentPost.title} />

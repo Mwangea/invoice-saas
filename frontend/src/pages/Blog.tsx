@@ -16,6 +16,8 @@ const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6; // Number of posts to display per page
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
@@ -23,6 +25,17 @@ const Blog = () => {
                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Calculate pagination values
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
 
   // Image carousel effect
   useEffect(() => {
@@ -32,6 +45,41 @@ const Blog = () => {
 
     return () => clearInterval(interval);
   }, [filteredPosts.length]);
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages is less than max pages to show
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Calculate start and end page numbers to show
+      let startPage, endPage;
+      
+      if (currentPage <= Math.ceil(maxPagesToShow / 2)) {
+        startPage = 1;
+        endPage = maxPagesToShow;
+      } else if (currentPage + Math.floor(maxPagesToShow / 2) >= totalPages) {
+        startPage = totalPages - maxPagesToShow + 1;
+        endPage = totalPages;
+      } else {
+        startPage = currentPage - Math.floor(maxPagesToShow / 2);
+        endPage = currentPage + Math.floor(maxPagesToShow / 2);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -179,7 +227,7 @@ const Blog = () => {
           {/* Blog Posts Grid */}
           <div className="lg:col-span-9">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {filteredPosts.map((post) => (
+              {currentPosts.map((post) => (
                 <article
                   key={post.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100"
@@ -255,25 +303,79 @@ const Blog = () => {
             </div>
 
             {/* Pagination */}
-            <div className="mt-12 flex justify-center">
-              <nav className="flex items-center space-x-2">
-                <button className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                  Previous
-                </button>
-                <button className="px-4 py-2 bg-primary-600 text-white rounded-lg">
-                  1
-                </button>
-                <button className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                  2
-                </button>
-                <button className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                  3
-                </button>
-                <button className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                  Next
-                </button>
-              </nav>
-            </div>
+            {totalPages > 1 && (
+              <div className="mt-12 flex justify-center">
+                <nav className="flex items-center space-x-2" aria-label="Pagination">
+                  {/* Previous page button */}
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 border rounded-lg flex items-center ${
+                      currentPage === 1 
+                        ? 'text-gray-400 border-gray-200 cursor-not-allowed' 
+                        : 'text-gray-600 border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500'
+                    }`}
+                    aria-label="Previous page"
+                  >
+                    <svg
+                      className="w-5 h-5 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Prev
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {pageNumbers.map(number => (
+                    <button
+                      key={number}
+                      onClick={() => setCurrentPage(number)}
+                      className={`px-4 py-2 rounded-lg ${
+                        currentPage === number
+                          ? 'bg-primary-600 text-white'
+                          : 'border border-gray-200 text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500'
+                      }`}
+                      aria-label={`Page ${number}`}
+                      aria-current={currentPage === number ? 'page' : undefined}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                  
+                  {/* Next page button */}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 border rounded-lg flex items-center ${
+                      currentPage === totalPages
+                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'text-gray-600 border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500'
+                    }`}
+                    aria-label="Next page"
+                  >
+                    Next
+                    <svg
+                      className="w-5 h-5 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            )}
+            
+            {/* Page indicator */}
+            {totalPages > 1 && (
+              <div className="text-center mt-4 text-sm text-gray-500">
+                Showing page {currentPage} of {totalPages}
+              </div>
+            )}
           </div>
         </div>
       </div>

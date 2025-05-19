@@ -14,6 +14,8 @@ import Careers from "./pages/Careers";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import BlogCategory from "./pages/BlogCategory";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 const App = () => {
   return (
@@ -29,6 +31,11 @@ const App = () => {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
         <Route path="/blog/category/:category" element={<BlogCategory />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+
+
+
       </Route>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

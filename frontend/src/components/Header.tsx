@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, } from 'react-router-dom';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  //const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,7 +19,6 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -30,13 +30,13 @@ const Header = () => {
     };
   }, [mobileMenuOpen]);
 
+  //const isHomePage = location.pathname === '/';
+
   return (
     <>
-      {/* Sticky Header */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
-            {/* Logo - Responsive sizing */}
             <Link to="/" className="flex items-center">
               <img
                 src="/logo3.png"
@@ -45,21 +45,24 @@ const Header = () => {
               />
             </Link>
 
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              {['features', 'pricing', 'about', 'blog', 'contact'].map((item) => (
+              {[{ path: '/', name: 'Home' },
+                { path: '/features', name: 'Features' },
+                { path: '/pricing', name: 'Pricing' },
+                { path: '/about', name: 'About' },
+                { path: '/blog', name: 'Blog' },
+                { path: '/contact', name: 'Contact' }].map((item) => (
                 <Link 
-                  key={item}
-                  to={`/${item}`} 
+                  key={item.path}
+                  to={item.path} 
                   className={`text-sm font-medium transition-colors duration-200 relative group ${isScrolled ? 'text-slate-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
                 >
-                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                  {item.name}
                   <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-blue-700 group-hover:w-full transition-all duration-300 ${isScrolled ? 'opacity-100' : 'opacity-90'}`}></span>
                 </Link>
               ))}
             </nav>
 
-            {/* Desktop CTA Buttons */}
             <div className="hidden md:flex items-center space-x-4">
               <Link 
                 to="/login" 
@@ -76,7 +79,6 @@ const Header = () => {
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-md focus:outline-none"
@@ -92,11 +94,9 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Redesigned Mobile Menu - Fullscreen overlay */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-gradient-to-b from-[#0F172A] to-[#1E293B] transition-opacity duration-300 overflow-y-auto">
           <div className="min-h-screen flex flex-col pt-24 px-6">
-            {/* Logo in menu */}
             <div className="flex justify-center mb-10">
               <img
                 src="/logo3.png"
@@ -104,8 +104,7 @@ const Header = () => {
                 className="h-16 w-auto"
               />
             </div>
-            
-            {/* Menu links with animation */}
+
             <nav className="flex flex-col space-y-6">
               {['features', 'pricing', 'about', 'blog', 'contact'].map((item, index) => (
                 <Link 
@@ -125,8 +124,7 @@ const Header = () => {
                 </Link>
               ))}
             </nav>
-            
-            {/* CTA Buttons */}
+
             <div className="mt-10 flex flex-col space-y-4">
               <Link 
                 to="/login" 
@@ -143,25 +141,21 @@ const Header = () => {
                 Get Started
               </Link>
             </div>
-            
-            {/* Social Icons */}
+
             <div className="mt-auto py-8">
               <div className="flex justify-center space-x-6">
-                {/* Facebook */}
                 <a href="#" className="text-white/70 hover:text-white transition-colors duration-200">
                   <span className="sr-only">Facebook</span>
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
                   </svg>
                 </a>
-                {/* Twitter/X */}
                 <a href="#" className="text-white/70 hover:text-white transition-colors duration-200">
                   <span className="sr-only">Twitter</span>
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
                 </a>
-                {/* LinkedIn */}
                 <a href="#" className="text-white/70 hover:text-white transition-colors duration-200">
                   <span className="sr-only">LinkedIn</span>
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
