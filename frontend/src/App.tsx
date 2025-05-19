@@ -9,6 +9,11 @@ import Login from "./Auth/LoginPage";
 import Register from "./Auth/RegisterPage";
 import ForgotPassword from "./Auth/ForgotPassword";
 import { ScrollPreserver } from "./components/ScrollPreserver";
+import Careers from "./pages/Careers";
+//import { BellRingIcon } from "lucide-react";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import BlogCategory from "./pages/BlogCategory";
 
 const App = () => {
   return (
@@ -20,7 +25,10 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
         <Route path="/features" element={<Features />} />
-        
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<BlogPost />} />
+        <Route path="/blog/category/:category" element={<BlogCategory />} />
       </Route>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
